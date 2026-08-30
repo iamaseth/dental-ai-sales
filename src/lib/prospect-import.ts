@@ -68,8 +68,8 @@ export function parseProspectJson(raw: string): ProspectImport[] {
     else rejected.push({ row: index + 1, reason: result.error.issues[0]?.message || "Invalid record" });
   });
 
-  if (!accepted.length && rejected.length) {
-    throw new Error(`No valid prospect records found. First rejected row: ${rejected[0].reason}`);
+if (!accepted.length && rejected.length) {
+    throw new Error(`No valid prospect records found. First rejected row: ${rejected[0]?.reason || "Invalid record"}`);
   }
 
   return accepted;
