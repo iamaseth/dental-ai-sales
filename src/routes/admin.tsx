@@ -1,94 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Clipboard, Download, Mail, Search, ShieldAlert, Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Clipboard, Mail, Search, ShieldAlert, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { normalizeProspect, parseProspectJson, type ProspectImport } from "@/lib/prospect-import";
 
-export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Dental AI Sales CRM" }] }),
-  component: Admin,
-});
+export const Route = createFileRoute("/admin")({ head:()=>({meta:[{title:"Dental AI Sales CRM"}]}), component:Admin });
+type Tab="prospects"|"research"|"import"|"campaigns"|"queue";
+type Prospect={id:string;practice_name:string;city:string|null;state:string|null;stage:string;source:string;opportunity_score:number|null;email:string|null;website:string|null};
+type Counts={prospects:number;qualified:number;replied:number;demos:number;queued:number;sent:number;suppressed:number};
+const tabs:[Tab,string][]=[["prospects","Prospects"],["research","AI Research"],["import","Import"],["campaigns","Campaigns"],["queue","Email Queue"]];
+const db=()=>supabase as any;
 
-type Tab = "prospects" | "research" | "import" | "campaigns" | "queue";
-type Prospect = { name: string; location: string; stage: string; source: string; score?: number; email?: string };
+function buildResearchPrompt(city:string,state:string,count:string){return `Find up to ${count||"25"} independent dental practices in ${city||"the selected city"}${state?`, ${state}`:""} that could be prospects for an AI front desk and website improvement service.\n\nReturn ONLY a JSON array. Do not add markdown or commentary. Do not invent missing information. Use null when not verified. Each object must use these keys:\npractice_name, website, domain, phone, email, address, city, state, postal_code, google_rating, google_reviews, contact_name, contact_title, source_url, notes.\n\nPrefer independent/local practices rather than large national chains. Preserve a source URL for verification. If a field is inferred rather than directly supported, leave it null.`}
 
-const demoProspects: Prospect[] = [];
-const tabs: { id: Tab; label: string }[] = [
-  { id: "prospects", label: "Prospects" },
-  { id: "research", label: "AI Research" },
-  { id: "import", label: "Import" },
-  { id: "campaigns", label: "Campaigns" },
-  { id: "queue", label: "Email Queue" },
-];
+function Admin(){
+ const[tab,setTab]=useState<Tab>("prospects"),[city,setCity]=useState(""),[state,setState]=useState(""),[count,setCount]=useState("25"),[paste,setPaste]=useState(""),[message,setMessage]=useState(""),[prospects,setProspects]=useState<Prospect[]>([]),[loading,setLoading]=useState(true),[counts,setCounts]=useState<Counts>({prospects:0,qualified:0,replied:0,demos:0,queued:0,sent:0,suppressed:0}),[outbound,setOutbound]=useState(false);
+ const prompt=useMemo(()=>buildResearchPrompt(city,state,count),[city,state,count]);
+ async function refresh(){setLoading(true);const[{data:p,error},{data:q},{data:s},{data:settings}]=await Promise.all([db().from("prospects").select("id,practice_name,city,state,stage,source,opportunity_score,email,website").order("created_at",{ascending:false}).limit(250),db().from("email_queue").select("status"),db().from("suppressions").select("id"),db().from("outbound_settings").select("outbound_enabled").eq("singleton",true).maybeSingle()]);if(error)setMessage(`Database: ${error.message}`);const rows=(p||[]) as Prospect[];setProspects(rows);const queue=q||[];setCounts({prospects:rows.length,qualified:rows.filter(x=>x.stage==="qualified").length,replied:rows.filter(x=>x.stage==="replied").length,demos:rows.filter(x=>x.stage==="demo").length,queued:queue.filter((x:any)=>x.status==="queued").length,sent:queue.filter((x:any)=>x.status==="sent").length,suppressed:(s||[]).length});setOutbound(Boolean(settings?.outbound_enabled));setLoading(false)}
+ useEffect(()=>{void refresh()},[]);
+ async function copyPrompt(provider:string){await navigator.clipboard.writeText(prompt);setMessage(`${provider} research prompt copied.`)}
+ async function importPasted(){try{const parsed=parseProspectJson(paste);const rows=parsed.map((x:ProspectImport)=>{const n=normalizeProspect(x);return{...n,source:tab==="research"?"chatgpt":"manual",verification_status:"unverified",stage:"new"}});if(!rows.length){setMessage("No valid prospect records found.");return}const{error}=await db().from("prospects").upsert(rows,{onConflict:"domain",ignoreDuplicates:true});if(error)throw error;await db().from("import_batches").insert({source:tab==="research"?"chatgpt":"manual",label:`Admin ${tab} import`,raw_payload:parsed,total_rows:parsed.length,new_rows:rows.length});setMessage(`${rows.length} valid records processed. Existing domains were skipped.`);setPaste("");await refresh()}catch(e:any){setMessage(e?.message||"Could not import. Paste the JSON array returned by ChatGPT or Perplexity.")}}
+ async function setStage(id:string,stage:string){const{error}=await db().from("prospects").update({stage,updated_at:new Date().toISOString()}).eq("id",id);if(error)setMessage(error.message);else await refresh()}
+ async function toggleOutbound(){const next=!outbound;const{error}=await db().from("outbound_settings").update({outbound_enabled:next,updated_at:new Date().toISOString()}).eq("singleton",true);if(error)setMessage(error.message);else{setOutbound(next);setMessage(next?"Outbound flag enabled. No sender worker is connected yet.":"All outbound disabled.")}}
+ return <main className="min-h-screen bg-[#f4f7f6] text-[#123f3b]"><header className="border-b bg-white"><div className="mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4"><div><strong className="text-lg">Dental AI · Platform Admin</strong><small className="block text-[#607772]">Sales CRM · Lovable database</small></div><div className="flex items-center gap-3"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${outbound?"bg-red-50 text-red-700":"bg-amber-50 text-amber-800"}`}>Outbound {outbound?"ON":"OFF"}</span><Link to="/for-dentists" className="text-sm font-semibold text-[#1686d9]">Sales demo</Link></div></div></header><section className="mx-auto max-w-7xl px-5 py-8"><nav className="mb-7 flex gap-2 overflow-x-auto">{tabs.map(([id,label])=><button key={id} onClick={()=>setTab(id)} className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold ${tab===id?"bg-[#123f3b] text-white":"bg-white text-[#45635f]"}`}>{label}</button>)}</nav>{message&&<div role="status" className="mb-5 rounded-xl border bg-white px-4 py-3 text-sm">{message}</div>}{tab==="prospects"&&<Prospects rows={prospects} counts={counts} loading={loading} setStage={setStage}/>} {tab==="research"&&<Research city={city} state={state} count={count} paste={paste} setCity={setCity} setState={setState} setCount={setCount} setPaste={setPaste} copyPrompt={copyPrompt} importPasted={importPasted}/>} {tab==="import"&&<ImportPanel paste={paste} setPaste={setPaste} importPasted={importPasted}/>} {tab==="campaigns"&&<Campaigns/>} {tab==="queue"&&<Queue counts={counts} outbound={outbound} toggle={toggleOutbound}/>}</section></main>}
 
-const sources = ["ChatGPT", "Perplexity", "Google Maps", "CSV", "Manual"];
-
-function buildResearchPrompt(city: string, state: string, count: string) {
-  return `Find up to ${count || "25"} independent dental practices in ${city || "the selected city"}${state ? `, ${state}` : ""} that could be prospects for an AI front desk and website improvement service.\n\nReturn ONLY a JSON array. Do not add markdown or commentary. Do not invent missing information. Use null when not verified. Each object must use these keys:\npractice_name, website, domain, phone, email, address, city, state, postal_code, google_rating, google_reviews, contact_name, contact_title, source_url, notes.\n\nPrefer independent/local practices rather than large national chains. Preserve a source URL for verification. If a field is inferred rather than directly supported, leave it null.`;
-}
-
-function Admin() {
-  const [tab, setTab] = useState<Tab>("prospects");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [count, setCount] = useState("25");
-  const [paste, setPaste] = useState("");
-  const [message, setMessage] = useState("");
-  const [outbound, setOutbound] = useState(false);
-  const prompt = useMemo(() => buildResearchPrompt(city, state, count), [city, state, count]);
-
-  async function copyPrompt(provider: string) {
-    await navigator.clipboard.writeText(prompt);
-    setMessage(`${provider} research prompt copied.`);
-  }
-
-  function validatePaste() {
-    try {
-      const parsed = JSON.parse(paste);
-      if (!Array.isArray(parsed)) throw new Error("Expected an array");
-      const valid = parsed.filter((x) => x && typeof x.practice_name === "string");
-      setMessage(`${valid.length} records validated. Database import will activate after the reviewed CRM migration is applied.`);
-    } catch {
-      setMessage("Could not validate. Paste the JSON array returned by ChatGPT or Perplexity.");
-    }
-  }
-
-  return (
-    <main className="min-h-screen bg-[#f4f7f6] text-[#123f3b]">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4">
-          <div><strong className="text-lg">Dental AI · Platform Admin</strong><small className="block text-[#607772]">Sales CRM · tenant data stays separate</small></div>
-          <div className="flex items-center gap-3"><span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">Outbound OFF</span><Link to="/for-dentists" className="text-sm font-semibold text-[#1686d9]">Sales demo</Link></div>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-7xl px-5 py-8">
-        <nav className="mb-7 flex gap-2 overflow-x-auto" aria-label="Sales CRM sections">
-          {tabs.map((x) => <button key={x.id} onClick={() => setTab(x.id)} className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold ${tab === x.id ? "bg-[#123f3b] text-white" : "bg-white text-[#45635f]"}`}>{x.label}</button>)}
-        </nav>
-
-        {message && <div role="status" className="mb-5 rounded-xl border border-[#d8e3e0] bg-white px-4 py-3 text-sm">{message}</div>}
-
-        {tab === "prospects" && <Prospects />}
-        {tab === "research" && <Research city={city} state={state} count={count} paste={paste} setCity={setCity} setState={setState} setCount={setCount} setPaste={setPaste} copyPrompt={copyPrompt} validatePaste={validatePaste} />}
-        {tab === "import" && <ImportPanel />}
-        {tab === "campaigns" && <Campaigns />}
-        {tab === "queue" && <Queue outbound={outbound} setOutbound={setOutbound} />}
-      </section>
-    </main>
-  );
-}
-
-function Prospects() {
-  return <><div className="grid gap-4 sm:grid-cols-4">{[["Prospects","0"],["Qualified","0"],["Replied","0"],["Demos","0"]].map(([a,b])=><div key={a} className="rounded-2xl bg-white p-5"><small className="text-[#607772]">{a}</small><strong className="mt-1 block text-3xl">{b}</strong></div>)}</div><div className="mt-6 rounded-2xl bg-white"><div className="flex flex-wrap items-center justify-between gap-3 border-b p-5"><div><h2 className="font-bold">Prospect pipeline</h2><p className="text-sm text-[#607772]">New → Researching → Qualified → Contacted → Replied → Demo → Proposal → Won/Lost</p></div><button className="rounded-xl bg-[#123f3b] px-4 py-2 text-sm font-semibold text-white">+ Add manually</button></div>{demoProspects.length === 0 && <div className="p-10 text-center"><Search className="mx-auto mb-3 text-[#8aa09c]"/><strong>No prospects yet</strong><p className="mt-1 text-sm text-[#607772]">Use AI Research or Import to add the first practices.</p></div>}</div></>;
-}
-
-function Research(p: {city:string;state:string;count:string;paste:string;setCity:(v:string)=>void;setState:(v:string)=>void;setCount:(v:string)=>void;setPaste:(v:string)=>void;copyPrompt:(v:string)=>void;validatePaste:()=>void}) {
-  return <div className="grid gap-6 lg:grid-cols-2"><div className="rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">1. Create research prompt</h2><p className="mt-1 text-sm text-[#607772]">No API. Copy this task into ChatGPT or Perplexity.</p><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="City" value={p.city} set={p.setCity} placeholder="Tampa"/><Field label="State" value={p.state} set={p.setState} placeholder="Florida"/><Field label="How many" value={p.count} set={p.setCount} placeholder="25"/></div><div className="mt-5 flex flex-wrap gap-3"><button onClick={()=>p.copyPrompt("ChatGPT")} className="rounded-xl bg-[#123f3b] px-4 py-3 text-sm font-semibold text-white"><Clipboard className="mr-2 inline h-4 w-4"/>Copy ChatGPT Prompt</button><button onClick={()=>p.copyPrompt("Perplexity")} className="rounded-xl border px-4 py-3 text-sm font-semibold"><Clipboard className="mr-2 inline h-4 w-4"/>Copy Perplexity Prompt</button></div></div><div className="rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">2. Paste results</h2><p className="mt-1 text-sm text-[#607772]">Paste the JSON array. We validate before anything enters the CRM.</p><textarea value={p.paste} onChange={(e)=>p.setPaste(e.target.value)} className="mt-5 min-h-64 w-full rounded-xl border p-4 font-mono text-xs" placeholder='[{"practice_name":"..."}]'/><button onClick={p.validatePaste} className="mt-3 rounded-xl bg-[#1686d9] px-4 py-3 text-sm font-semibold text-white">Validate Results</button></div></div>;
-}
-
-function ImportPanel(){return <div className="rounded-2xl bg-white p-6"><Upload className="mb-3"/><h2 className="text-xl font-bold">Import prospects</h2><p className="mt-1 max-w-2xl text-sm text-[#607772]">Google Maps/local scripts, OpenDirectories, DataForge and spreadsheets should all use the same CSV/JSON import contract. Imports will preview duplicates and rejected rows before saving.</p><div className="mt-5 rounded-xl border-2 border-dashed p-10 text-center"><Download className="mx-auto mb-2 text-[#8aa09c]"/><strong>CSV / JSON importer</strong><p className="mt-1 text-sm text-[#607772]">UI ready; database write activates after the reviewed migration.</p></div><div className="mt-5 flex flex-wrap gap-2">{sources.map(x=><span key={x} className="rounded-full bg-[#eef4f2] px-3 py-1 text-xs font-semibold">{x}</span>)}</div></div>}
-
-function Campaigns(){return <div className="rounded-2xl bg-white p-6"><Mail className="mb-3"/><h2 className="text-xl font-bold">Campaigns</h2><p className="mt-1 text-sm text-[#607772]">Qualified prospects can be staged here before entering the outbound queue. Discovery never authorizes sending automatically.</p><div className="mt-6 rounded-xl border p-8 text-center text-sm text-[#607772]">No campaigns yet.</div></div>}
-
-function Queue({outbound,setOutbound}:{outbound:boolean;setOutbound:(v:boolean)=>void}){return <div className="rounded-2xl bg-white p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><ShieldAlert className="mb-3"/><h2 className="text-xl font-bold">Email Queue Safety</h2><p className="mt-1 text-sm text-[#607772]">Minimum spacing: 60 seconds · suppression checked · duplicate recipient blocked.</p></div><button onClick={()=>setOutbound(!outbound)} className={`rounded-xl px-4 py-3 text-sm font-bold ${outbound?"bg-red-600 text-white":"bg-[#123f3b] text-white"}`}>{outbound?"STOP ALL OUTBOUND":"Outbound remains OFF"}</button></div><div className="mt-6 grid gap-3 sm:grid-cols-3">{[["Queued","0"],["Sent today","0"],["Suppressed","0"]].map(([a,b])=><div key={a} className="rounded-xl bg-[#f4f7f6] p-4"><small>{a}</small><strong className="block text-2xl">{b}</strong></div>)}</div><p className="mt-5 text-xs text-[#607772]">This screen does not send email. A trusted server worker/provider must be configured and tested before outbound can be enabled.</p></div>}
-
-function Field({label,value,set,placeholder}:{label:string;value:string;set:(v:string)=>void;placeholder:string}){return <label className="text-sm font-semibold">{label}<input value={value} onChange={(e)=>set(e.target.value)} placeholder={placeholder} className="mt-1 block w-full rounded-xl border px-3 py-2 font-normal"/></label>}
+function Prospects({rows,counts,loading,setStage}:{rows:Prospect[];counts:Counts;loading:boolean;setStage:(id:string,s:string)=>void}){return <><div className="grid gap-4 sm:grid-cols-4">{[["Prospects",counts.prospects],["Qualified",counts.qualified],["Replied",counts.replied],["Demos",counts.demos]].map(([a,b])=><div key={String(a)} className="rounded-2xl bg-white p-5"><small className="text-[#607772]">{a}</small><strong className="mt-1 block text-3xl">{b}</strong></div>)}</div><div className="mt-6 overflow-hidden rounded-2xl bg-white"><div className="border-b p-5"><h2 className="font-bold">Prospect pipeline</h2><p className="text-sm text-[#607772]">New → Researching → Qualified → Email Queue → Contacted → Replied → Demo → Proposal → Won/Lost</p></div>{loading?<div className="p-10 text-center">Loading…</div>:rows.length===0?<div className="p-10 text-center"><Search className="mx-auto mb-3 text-[#8aa09c]"/><strong>No prospects yet</strong><p className="mt-1 text-sm text-[#607772]">Use AI Research or Import to add the first practices.</p></div>:<div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-[#f4f7f6] text-xs uppercase text-[#607772]"><tr><th className="p-3">Practice</th><th>Location</th><th>Email</th><th>Source</th><th>Score</th><th className="pr-3">Stage</th></tr></thead><tbody>{rows.map(x=><tr key={x.id} className="border-t"><td className="p-3 font-semibold">{x.practice_name}</td><td>{[x.city,x.state].filter(Boolean).join(", ")||"—"}</td><td>{x.email||"—"}</td><td>{x.source}</td><td>{x.opportunity_score??"—"}</td><td className="pr-3"><select value={x.stage} onChange={e=>void setStage(x.id,e.target.value)} className="rounded-lg border px-2 py-1">{["new","researching","qualified","email_queue","contacted","replied","demo","proposal","won","lost"].map(s=><option key={s}>{s}</option>)}</select></td></tr>)}</tbody></table></div>}</div></>}
+function Research(p:any){return <div className="grid gap-6 lg:grid-cols-2"><div className="rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">1. Create research prompt</h2><p className="mt-1 text-sm text-[#607772]">No API. Copy into ChatGPT or Perplexity.</p><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="City" value={p.city} set={p.setCity} placeholder="Tampa"/><Field label="State" value={p.state} set={p.setState} placeholder="Florida"/><Field label="How many" value={p.count} set={p.setCount} placeholder="25"/></div><div className="mt-5 flex flex-wrap gap-3"><button onClick={()=>p.copyPrompt("ChatGPT")} className="rounded-xl bg-[#123f3b] px-4 py-3 text-sm font-semibold text-white"><Clipboard className="mr-2 inline h-4 w-4"/>Copy ChatGPT Prompt</button><button onClick={()=>p.copyPrompt("Perplexity")} className="rounded-xl border px-4 py-3 text-sm font-semibold"><Clipboard className="mr-2 inline h-4 w-4"/>Copy Perplexity Prompt</button></div></div><PasteBox paste={p.paste} setPaste={p.setPaste} action={p.importPasted} label="Import to CRM"/></div>}
+function ImportPanel({paste,setPaste,importPasted}:any){return <div className="rounded-2xl bg-white p-6"><Upload className="mb-3"/><h2 className="text-xl font-bold">Import prospects</h2><p className="mt-1 text-sm text-[#607772]">Paste standard JSON from local scripts, Google Maps exports or another approved source. CSV upload comes next.</p><PasteBox paste={paste} setPaste={setPaste} action={importPasted} label="Import JSON"/></div>}
+function PasteBox({paste,setPaste,action,label}:any){return <div className="mt-5 rounded-2xl bg-white"><textarea value={paste} onChange={e=>setPaste(e.target.value)} className="min-h-64 w-full rounded-xl border p-4 font-mono text-xs" placeholder='[{"practice_name":"..."}]'/><button onClick={()=>void action()} className="mt-3 rounded-xl bg-[#1686d9] px-4 py-3 text-sm font-semibold text-white">{label}</button></div>}
+function Campaigns(){return <div className="rounded-2xl bg-white p-6"><Mail className="mb-3"/><h2 className="text-xl font-bold">Campaigns</h2><p className="mt-1 text-sm text-[#607772]">Database tables are active. Campaign creation/recipient staging is the next connection.</p></div>}
+function Queue({counts,outbound,toggle}:{counts:Counts;outbound:boolean;toggle:()=>void}){return <div className="rounded-2xl bg-white p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><ShieldAlert className="mb-3"/><h2 className="text-xl font-bold">Email Queue Safety</h2><p className="mt-1 text-sm text-[#607772]">Minimum spacing: 60 seconds · suppression checked · duplicate recipient blocked.</p></div><button onClick={toggle} className={`rounded-xl px-4 py-3 text-sm font-bold ${outbound?"bg-red-600 text-white":"bg-[#123f3b] text-white"}`}>{outbound?"STOP ALL OUTBOUND":"Enable outbound flag"}</button></div><div className="mt-6 grid gap-3 sm:grid-cols-3">{[["Queued",counts.queued],["Sent",counts.sent],["Suppressed",counts.suppressed]].map(([a,b])=><div key={String(a)} className="rounded-xl bg-[#f4f7f6] p-4"><small>{a}</small><strong className="block text-2xl">{b}</strong></div>)}</div><p className="mt-5 text-xs text-[#607772]">No sender worker/provider is connected yet. Enabling the flag alone cannot send mail.</p></div>}
+function Field({label,value,set,placeholder}:any){return <label className="text-sm font-semibold">{label}<input value={value} onChange={e=>set(e.target.value)} placeholder={placeholder} className="mt-1 block w-full rounded-xl border px-3 py-2 font-normal"/></label>}
