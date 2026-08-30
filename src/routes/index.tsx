@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarDays, MessageCircle, Phone, ArrowRight, X, Send, Star } from "lucide-react";
 import { answerDentalQuestion } from "../lib/dentalChatbot";
+import { KrispyWidget } from "../components/KrispyWidget";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -61,6 +62,7 @@ function PatientSite() {
     <footer className="border-t border-[#d7e7df] px-5 py-10 text-center text-sm text-[#607772]">LaBelle Dental Clinic · #77 Street 110, Phnom Penh</footer>
 
     <button onClick={() => setChatOpen(true)} className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#1686d9] px-5 py-3.5 font-semibold text-white shadow-2xl"><MessageCircle className="size-5"/> Ask LaBelle</button>
+    <KrispyWidget />
     {chatOpen && <div className="fixed inset-0 z-50 grid place-items-end bg-black/30 p-4 sm:place-items-center"><div className="w-full max-w-md rounded-3xl bg-white p-6"><div className="flex justify-between"><div><small className="font-bold uppercase tracking-wider text-[#1686d9]">LaBelle Front Desk</small><h2 className="mt-1 text-2xl font-semibold">How can we help?</h2></div><button onClick={()=>setChatOpen(false)} aria-label="Close" className="grid size-9 place-items-center rounded-full border"><X className="size-4"/></button></div><div className="mt-6 grid gap-3"><a href="#appointments" onClick={()=>setChatOpen(false)} className="rounded-2xl border p-4 font-semibold">Choose an appointment time</a><a href="#front-desk" onClick={()=>setChatOpen(false)} className="rounded-2xl border p-4 font-semibold">Ask a clinic question</a><a href="tel:+855236767897" className="flex items-center gap-2 rounded-2xl border p-4 font-semibold"><Phone className="size-5"/> Call LaBelle Dental Clinic</a></div></div></div>}
   </main>;
 }
