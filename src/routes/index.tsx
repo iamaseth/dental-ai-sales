@@ -1,71 +1,82 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarDays, MessageCircle, Phone, ArrowRight, X, Send, Star, Stethoscope, Sparkles, MapPin, Home, HeartPulse } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, MessageCircle, Megaphone, MonitorSmartphone, Send, Sparkles } from "lucide-react";
 import { answerDentalQuestion } from "../lib/dentalChatbot";
-import { KrispyWidget } from "../components/KrispyWidget";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "LaBelle Dental Clinic | Phnom Penh" },
-    { name: "description", content: "Patient information, dental services and appointment requests for LaBelle Dental Clinic in Phnom Penh." },
+    { title: "Dental AI Front Desk | Website, Chat, Booking & Promotions" },
+    { name: "description", content: "A live demo of an AI front desk for dental practices: website, chat, appointment requests and patient promotions." },
   ] }),
-  component: PatientSite,
+  component: SalesDemo,
 });
 
-const services = [
-  ["Checkups & cleaning", "Routine examinations, scaling, polishing and preventive care."],
-  ["Orthodontics", "Braces consultations and treatment for tooth alignment."],
-  ["Dental implants", "Implant consultations, records review and treatment planning."],
-  ["Fillings & repairs", "Assessment of cavities, chips, broken teeth and existing fillings."],
-  ["Crowns & root-canal care", "Consultations for crowns, posts and root-canal treatment."],
-  ["Cosmetic consultations", "Questions about veneers and smile-improvement options."],
+const offers = [
+  { icon: MonitorSmartphone, title: "Need a better website?", text: "We can rebuild or improve your dental website for mobile, SEO and conversion." },
+  { icon: MessageCircle, title: "Need an AI chatbox?", text: "Give patients immediate answers from your approved practice information, 24/7." },
+  { icon: CalendarDays, title: "Need appointments?", text: "Capture booking requests, qualify the visit and connect to your scheduling workflow." },
+  { icon: Megaphone, title: "Need promotions?", text: "Turn services, offers and reminders into useful patient campaigns without adding front-desk work." },
 ];
 
-function PatientSite() {
-  const [chatOpen, setChatOpen] = useState(false);
-  const [answer, setAnswer] = useState("សួស្តី! Hi, I’m LaBelle Front Desk. How can I help with your dental visit?");
-  const [question, setQuestion] = useState("");
-  const [requested, setRequested] = useState(false);
+const demoQuestions = [
+  "Can you improve my dental website?",
+  "How would your chatbot work for my practice?",
+  "Can patients book appointments through it?",
+  "Can you help promote implants or whitening?",
+];
 
-  function ask(nextQuestion = question) {
-    if (!nextQuestion.trim()) return;
-    const result = answerDentalQuestion(nextQuestion);
-    setAnswer(result.answer);
+function SalesDemo() {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("Hi — I’m the Dental AI demo. Ask me how we can improve your website, answer patients, book appointments or promote your services.");
+
+  function ask(next = question) {
+    const q = next.trim();
+    if (!q) return;
+    const lower = q.toLowerCase();
+    let response = "We can tailor the system to your practice. The first step is to review your current website, patient questions and appointment workflow, then build a demo using your own information.";
+    if (lower.includes("website")) response = "Yes. We can audit your existing dental website, improve the design and mobile experience, strengthen local SEO/AEO, and connect the site directly to the AI front desk.";
+    else if (lower.includes("chat") || lower.includes("bot")) response = "The chatbox is trained on your verified practice information. It can answer common patient questions, collect lead details, guide appointment requests and hand off to staff when needed.";
+    else if (lower.includes("book") || lower.includes("appointment") || lower.includes("schedule")) response = "Yes. We can collect the service, preferred date/time and patient contact details, then connect the workflow to your calendar or practice-management system. Final booking rules stay deterministic.";
+    else if (lower.includes("promot") || lower.includes("implant") || lower.includes("whitening") || lower.includes("marketing")) response = "Yes. We can build service pages, promotions and follow-up campaigns around treatments you want to grow, while the chatbot answers questions and turns interest into appointment requests.";
+    else if (lower.includes("cost") || lower.includes("price")) response = "Pricing depends on what you need: website improvement, AI chat, appointment automation, voice receptionist and ongoing marketing can be packaged separately or together. We can start with a simple pilot around your practice.";
+    else {
+      const dental = answerDentalQuestion(q);
+      if (dental?.answer && !dental.answer.toLowerCase().includes("don't know")) response = dental.answer;
+    }
+    setAnswer(response);
     setQuestion("");
   }
 
-  return <main className="min-h-screen bg-[#f7f9ff] pb-20 text-[#181c20] md:pb-0">
-    <header className="sticky top-0 z-30 border-b border-[#dfe5ec] bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
-        <a href="/" className="flex items-center gap-2.5"><span className="grid size-9 place-items-center rounded-full bg-[#006098] text-white"><HeartPulse className="size-5"/></span><strong className="font-display text-xl text-[#006098]">LaBelle Dental</strong></a>
-        <nav className="hidden items-center gap-6 text-sm font-semibold text-[#404851] md:flex"><a className="text-[#006098]" href="#top">Home</a><a href="#services">Services</a><a href="#appointments">Booking</a><a href="#front-desk">Support</a></nav>
-        <a href="tel:+855236767897" className="hidden rounded-lg bg-[#006098] px-4 py-2.5 text-sm font-semibold text-white sm:inline-flex">Call clinic</a>
+  return <main className="min-h-screen bg-[#f7f9ff] text-[#181c20]">
+    <header className="border-b border-[#dfe5ec] bg-white">
+      <div className="mx-auto flex min-h-16 max-w-[1200px] items-center justify-between gap-4 px-4 md:px-8">
+        <div><strong className="font-display text-xl text-[#006098]">Dental AI Front Desk</strong><span className="ml-3 hidden text-sm text-[#66717d] sm:inline">Live sales demo for dental practices</span></div>
+        <button onClick={() => document.getElementById("ask-us")?.scrollIntoView({ behavior: "smooth" })} className="rounded-lg bg-[#006098] px-4 py-2.5 text-sm font-semibold text-white">Ask us</button>
       </div>
     </header>
 
-    <section id="top" className="mx-auto grid max-w-[1200px] gap-8 px-4 py-12 md:grid-cols-2 md:px-8 md:py-20">
-      <div className="self-center"><p className="mb-4 text-sm font-semibold uppercase tracking-[.18em] text-[#006098]">Serving Phnom Penh</p><h1 className="font-display text-5xl font-bold leading-[1.02] tracking-[-.035em] sm:text-6xl">Healthy smiles.<br/><span className="italic text-[#006098]">Warm welcome.</span></h1><p className="mt-6 max-w-lg text-lg leading-8 text-[#404851]">Trusted dental care in Daun Penh, with a multilingual front desk ready to help patients quickly.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><a href="#appointments" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#006098] px-6 py-3.5 font-semibold text-white shadow-sm"><CalendarDays className="size-5"/> Request appointment</a><button onClick={() => setChatOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#006098] bg-white px-6 py-3.5 font-semibold text-[#006098]"><MessageCircle className="size-5"/> Ask LaBelle</button></div></div>
-      <div className="overflow-hidden rounded-xl border border-[#dfe5ec] bg-white shadow-[0_8px_30px_rgba(41,72,107,.08)]"><img src="https://harbor-dental-ai-front-desk.blond-titan-1971.chatgpt.site/harbor-dental-hero.png" alt="Dentist speaking with a patient" className="h-[420px] w-full object-cover md:h-[520px]" /></div>
+    <section className="relative overflow-hidden border-b border-[#dfe5ec] bg-white">
+      <div className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 py-16 md:px-8 lg:grid-cols-[1fr_.9fr] lg:py-24">
+        <div><p className="mb-4 text-sm font-bold uppercase tracking-[.18em] text-[#006098]">Built for independent dental practices</p><h1 className="font-display text-5xl font-bold leading-[1.02] tracking-[-.04em] sm:text-6xl">Your website should do more than look good.</h1><p className="mt-6 max-w-2xl text-xl leading-8 text-[#4a5661]">Turn it into a 24/7 front desk that answers patients, captures appointments and helps sell the services you want to grow.</p><div className="mt-8 grid gap-3 sm:grid-cols-2">{["Website improvement","AI patient chat","Appointment capture","Promotions & follow-up"].map(item => <div key={item} className="flex items-center gap-2 text-sm font-semibold"><span className="grid size-6 place-items-center rounded-full bg-[#eaf5fb] text-[#006098]"><Check className="size-4"/></span>{item}</div>)}</div></div>
+
+        <div id="ask-us" className="relative">
+          <div className="sales-pointer pointer-events-none absolute -left-28 top-14 hidden items-center gap-3 lg:flex"><div className="rounded-full bg-[#fff4d8] px-4 py-2 text-sm font-bold text-[#7a5300] shadow-lg">Try the system →</div><ArrowRight className="pointer-icon size-9 text-[#006098]" /></div>
+          <div className="rounded-3xl border border-[#cfdde8] bg-white p-5 shadow-[0_24px_70px_rgba(44,80,112,.16)] md:p-6">
+            <div className="mb-5 flex items-center gap-3 border-b border-[#e6edf2] pb-4"><span className="grid size-11 place-items-center rounded-full bg-[#006098] text-white"><Sparkles className="size-5"/></span><div><strong className="block">Ask Dental AI</strong><small className="text-[#69747e]">Test the same experience your patients could use</small></div></div>
+            <div className="min-h-28 rounded-2xl bg-[#f4f9fc] p-4 text-sm leading-6">{answer}</div>
+            <div className="mt-4 flex flex-wrap gap-2">{demoQuestions.map(q => <button key={q} onClick={() => ask(q)} className="rounded-full border border-[#d6e1e9] bg-white px-3 py-2 text-xs font-medium text-[#006098] hover:bg-[#f4f9fc]">{q}</button>)}</div>
+            <form onSubmit={e => { e.preventDefault(); ask(); }} className="mt-4 flex gap-2 rounded-xl border border-[#cfdde8] bg-white p-2"><input value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about your dental practice…" className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none"/><button aria-label="Send" className="grid size-10 place-items-center rounded-lg bg-[#006098] text-white"><Send className="size-4"/></button></form>
+            <p className="mt-3 text-center text-xs text-[#69747e]">Ask about your website, chatbot, appointments, promotions or pricing.</p>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section id="services" className="mx-auto max-w-[1200px] px-4 py-16 md:px-8 md:py-24"><div className="mb-10 max-w-2xl"><h2 className="font-display text-4xl font-bold tracking-[-.03em]">Dental care starts with the right questions.</h2><p className="mt-4 leading-7 text-[#404851]">Ask about treatment, previous dental work or records. LaBelle’s team confirms availability, suitability and pricing.</p></div><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{services.map(([title,text],i)=><article key={title} className={`flex min-h-56 flex-col rounded-xl border border-[#e1e8ed] p-7 shadow-[0_4px_24px_rgba(41,72,107,.05)] ${i===5?"bg-[#007abe] text-white":"bg-white"}`}><span className={`mb-5 grid size-12 place-items-center rounded-full ${i===5?"bg-white text-[#007abe]":"bg-[#f4f9fc] text-[#006098]"}`}>{i===5?<Sparkles className="size-5"/>:<Stethoscope className="size-5"/>}</span><h3 className="font-display text-2xl font-semibold">{title}</h3><p className={`mt-3 text-sm leading-6 ${i===5?"text-white/85":"text-[#5d6670]"}`}>{text}</p><span className={`mt-auto pt-6 text-sm font-semibold ${i===5?"text-white":"text-[#006098]"}`}>Learn more →</span></article>)}</div></section>
+    <section className="mx-auto max-w-[1200px] px-4 py-16 md:px-8 md:py-24"><div className="max-w-2xl"><p className="text-sm font-bold uppercase tracking-[.18em] text-[#006098]">What do you need?</p><h2 className="mt-3 font-display text-4xl font-bold tracking-[-.03em]">One system, four immediate business problems.</h2></div><div className="mt-10 grid gap-5 md:grid-cols-2">{offers.map(({icon:Icon,title,text}) => <button key={title} onClick={() => { setQuestion(title); document.getElementById("ask-us")?.scrollIntoView({behavior:"smooth"}); }} className="group rounded-2xl border border-[#dfe5ec] bg-white p-6 text-left shadow-[0_4px_24px_rgba(41,72,107,.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(41,72,107,.11)]"><span className="grid size-12 place-items-center rounded-xl bg-[#eef7fb] text-[#006098]"><Icon className="size-6"/></span><h3 className="mt-5 font-display text-2xl font-semibold">{title}</h3><p className="mt-2 leading-7 text-[#5a6670]">{text}</p><span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#006098]">Ask the demo <ArrowRight className="size-4 transition group-hover:translate-x-1"/></span></button>)}</div></section>
 
-    <section id="reviews" className="bg-white px-4 py-16 md:px-8 md:py-24"><div className="mx-auto grid max-w-[1200px] gap-10 lg:grid-cols-[.8fr_1.2fr]"><div><p className="text-sm font-semibold uppercase tracking-[.18em] text-[#006098]">Patient reviews</p><h2 className="mt-3 font-display text-4xl font-bold tracking-[-.03em]">Care people recommend.</h2><div className="mt-6 flex items-center gap-4"><strong className="font-display text-5xl">4.5</strong><div><div className="flex text-[#f6a84b]">{[1,2,3,4,5].map(n=><Star key={n} className="size-5 fill-current"/>)}</div><p className="mt-1 text-sm text-[#5d6670]">50+ publicly listed reviews</p></div></div><p className="mt-8 max-w-sm text-xs leading-5 text-[#707882]">Public review information is independently sourced and should be confirmed by LaBelle before production launch.</p></div><div className="grid gap-5 sm:grid-cols-2"><ReviewCard text="“Good dental services” from a patient who reports visiting LaBelle for about 15 years." source="Long-term patient · Cambodia Expats Online" href="https://cambodiaexpatsonline.com/ask-the-expats-questions-answers/reasonably-priced-dentist-t60056-10.html"/><ReviewCard text="A recent recommendation describes LaBelle as good quality, friendly and more affordable than premium alternatives." source="Phnom Penh patient recommendation · Reddit" href="https://www.reddit.com/r/cambodia/comments/1vlprtx/dentist_recommendation_and_price/"/></div></div></section>
+    <section className="bg-[#071f3d] px-4 py-16 text-white md:px-8 md:py-20"><div className="mx-auto grid max-w-[1100px] gap-10 lg:grid-cols-[1fr_.8fr] lg:items-center"><div><p className="text-sm font-bold uppercase tracking-[.18em] text-[#8dc9ef]">The point of this demo</p><h2 className="mt-3 font-display text-4xl font-bold tracking-[-.03em]">Don’t just read about our service. Use it.</h2><p className="mt-5 max-w-2xl text-lg leading-8 text-white/70">A dentist can ask the chatbot questions about the service while simultaneously experiencing how an AI front desk feels to a patient. That interaction is the sales presentation.</p></div><button onClick={() => document.getElementById("ask-us")?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-4 font-bold text-[#006098]">Ask us about your practice <ArrowRight className="size-5"/></button></div></section>
 
-    <section id="appointments" className="mx-auto grid max-w-[1200px] gap-10 px-4 py-16 md:px-8 md:py-24 lg:grid-cols-2"><div className="lg:sticky lg:top-28 lg:self-start"><h2 className="font-display text-4xl font-bold tracking-[-.03em] text-[#006098]">Request a preferred visit time.</h2><p className="mt-5 text-lg leading-8 text-[#404851]">No login is required. LaBelle confirms every appointment by phone to make sure the visit is scheduled correctly.</p><img src="https://harbor-dental-ai-front-desk.blond-titan-1971.chatgpt.site/labelle-clinic.jpg" alt="LaBelle Dental Clinic" className="mt-8 hidden h-64 w-full rounded-xl object-cover shadow-sm lg:block"/></div><form onSubmit={(e)=>{e.preventDefault();setRequested(true)}} className="rounded-2xl border border-[#e1e8ed] bg-white p-6 shadow-[0_4px_30px_rgba(41,72,107,.08)] md:p-8"><label className="grid gap-2 text-sm font-semibold">Service<select className="h-12 rounded-lg border bg-[#f7f9ff] px-3"><option>Checkup & cleaning</option><option>Orthodontics consultation</option><option>Dental implant consultation</option><option>Tooth pain or broken tooth</option></select></label><div className="mt-5 grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-semibold">Preferred date<input required type="date" className="h-12 rounded-lg border bg-[#f7f9ff] px-3"/></label><label className="grid gap-2 text-sm font-semibold">Preferred time<select className="h-12 rounded-lg border bg-[#f7f9ff] px-3"><option>8:30 AM</option><option>10:00 AM</option><option>2:00 PM</option><option>5:00 PM</option></select></label></div><label className="mt-5 grid gap-2 text-sm font-semibold">Name<input required className="h-12 rounded-lg border bg-[#f7f9ff] px-3" placeholder="Your full name"/></label><label className="mt-5 grid gap-2 text-sm font-semibold">Phone or Telegram<input required className="h-12 rounded-lg border bg-[#f7f9ff] px-3" placeholder="Phone number or username"/></label><button className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#006098] px-5 py-4 font-semibold text-white">Request this time <ArrowRight className="size-4"/></button><p className="mt-3 text-center text-xs text-[#5d6670]">The clinic will call to confirm availability.</p>{requested&&<p className="mt-4 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-900">Your demo request is prepared. LaBelle would call to confirm; no real appointment was created.</p>}</form></section>
-
-    <section id="front-desk" className="bg-[#eef4f8] px-4 py-16 md:px-8 md:py-24"><div className="mx-auto grid max-w-[1200px] gap-10 lg:grid-cols-2"><div><p className="text-sm font-semibold uppercase tracking-[.18em] text-[#006098]">AI front desk</p><h2 className="mt-3 font-display text-4xl font-bold tracking-[-.03em]">Ask LaBelle before your visit.</h2><p className="mt-5 text-lg leading-8 text-[#404851]">The front desk answers approved questions, asks about previous treatment and helps prepare a useful appointment request without diagnosing.</p></div><div className="rounded-2xl border border-[#dfe5ec] bg-white p-6 shadow-sm"><div className="rounded-xl bg-[#f4f9fc] p-4 text-sm leading-6">{answer}</div><div className="mt-5 flex flex-wrap gap-2">{["What services do you offer?","I have X-rays","I have tooth pain","Book an appointment"].map(x=><button key={x} onClick={()=>ask(x)} className="rounded-full border px-3 py-2 text-xs text-[#006098]">{x}</button>)}</div><form onSubmit={(e)=>{e.preventDefault();ask()}} className="mt-5 flex rounded-lg border bg-white p-1.5"><input value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Ask LaBelle…" className="min-w-0 flex-1 bg-transparent px-3 outline-none"/><button aria-label="Send" className="grid size-10 place-items-center rounded-lg bg-[#006098] text-white"><Send className="size-4"/></button></form></div></div></section>
-
-    <section id="about" className="mx-auto grid max-w-[1200px] gap-10 px-4 py-16 md:px-8 md:py-24 lg:grid-cols-2"><div className="overflow-hidden rounded-xl"><img src="https://harbor-dental-ai-front-desk.blond-titan-1971.chatgpt.site/labelle-clinic.jpg" alt="LaBelle Dental Clinic storefront" className="h-[380px] w-full object-cover"/></div><div className="self-center"><MapPin className="size-8 text-[#006098]"/><h2 className="mt-4 font-display text-4xl font-bold tracking-[-.03em]">Dental care in the heart of Phnom Penh.</h2><p className="mt-5 text-lg leading-8 text-[#404851]">#77 Street 110, Sangkat Wat Phnom, Khan Daun Penh, Phnom Penh</p><p className="mt-4 font-semibold">092 96 31 94 · 023 67 67 897</p><p className="mt-6 text-xs text-[#707882]">Public information requires clinic verification before production use.</p></div></section>
-
-    <footer className="border-t border-[#dfe5ec] bg-white px-4 py-10 text-center text-sm text-[#5d6670]">LaBelle Dental Clinic · #77 Street 110, Phnom Penh</footer>
-
-    <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-[#dfe5ec] bg-white px-2 pb-3 pt-2 shadow-[0_-4px_20px_rgba(66,96,132,.08)] md:hidden"><a href="#top" className="flex flex-col items-center gap-1 text-[10px] font-semibold text-[#006098]"><Home className="size-5"/>Home</a><a href="#services" className="flex flex-col items-center gap-1 text-[10px] font-semibold text-[#5d6670]"><Stethoscope className="size-5"/>Services</a><a href="#appointments" className="flex flex-col items-center gap-1 rounded-full bg-[#007abe] px-4 py-1 text-[10px] font-semibold text-white"><CalendarDays className="size-5"/>Booking</a><button onClick={()=>setChatOpen(true)} className="flex flex-col items-center gap-1 text-[10px] font-semibold text-[#5d6670]"><MessageCircle className="size-5"/>Support</button></nav>
-
-    <button onClick={()=>setChatOpen(true)} className="fixed bottom-5 right-5 z-40 hidden items-center gap-2 rounded-full bg-[#006098] px-5 py-3.5 font-semibold text-white shadow-xl md:flex"><MessageCircle className="size-5"/> Ask LaBelle</button>
-    <KrispyWidget />
-    {chatOpen&&<div className="fixed inset-0 z-50 grid place-items-end bg-black/30 p-4 sm:place-items-center"><div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"><div className="flex justify-between"><div><small className="font-semibold uppercase tracking-[.14em] text-[#006098]">LaBelle Front Desk</small><h2 className="mt-1 font-display text-2xl font-bold">How can we help?</h2></div><button onClick={()=>setChatOpen(false)} aria-label="Close" className="grid size-9 place-items-center rounded-full border"><X className="size-4"/></button></div><div className="mt-6 grid gap-3"><a href="#appointments" onClick={()=>setChatOpen(false)} className="rounded-xl border p-4 font-semibold">Choose an appointment time</a><a href="#front-desk" onClick={()=>setChatOpen(false)} className="rounded-xl border p-4 font-semibold">Ask a clinic question</a><a href="tel:+855236767897" className="flex items-center gap-2 rounded-xl border p-4 font-semibold"><Phone className="size-5"/> Call LaBelle Dental Clinic</a></div></div></div>}
+    <footer className="bg-white px-4 py-8 text-center text-sm text-[#69747e]">Dental AI Front Desk · Website · Chat · Booking · Promotions</footer>
+    <button onClick={() => document.getElementById("ask-us")?.scrollIntoView({ behavior: "smooth" })} className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#006098] px-5 py-3.5 font-semibold text-white shadow-2xl"><MessageCircle className="size-5"/> Ask us</button>
   </main>;
 }
-
-function ReviewCard({text,source,href}:{text:string;source:string;href:string}){return <article className="rounded-xl border border-[#e1e8ed] bg-[#f7f9ff] p-6"><div className="flex text-[#f6a84b]">{[1,2,3,4,5].map(n=><Star key={n} className="size-4 fill-current"/>)}</div><blockquote className="mt-5 leading-7">{text}</blockquote><p className="mt-5 text-sm font-semibold">{source}</p><a href={href} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-semibold text-[#006098]">Read source →</a></article>}
