@@ -764,7 +764,7 @@ export function answerDentalQuestion(question: string): { tag: string; answer: s
     }
   }
 
-  if (bestScore < 8) return { tag: "out_of_scope", answer: directAnswers.out_of_scope! };
+  if (bestScore < 8) return { tag: "out_of_scope", answer: directAnswers["out_of_scope"]! };
   const direct = directAnswers[bestTag];
   if (direct) return { tag: bestTag, answer: direct };
   const treatment = treatmentLabels[bestTag];
@@ -772,5 +772,5 @@ export function answerDentalQuestion(question: string): { tag: string; answer: s
     tag: bestTag,
     answer: "LaBelle can assess questions about " + treatment + ". Suitability, timing, availability and price depend on a dentist’s examination, so I won’t guess. Would you like to prepare an appointment request?"
   };
-  return { tag: bestTag, answer: directAnswers.out_of_scope! };
+  return { tag: bestTag, answer: directAnswers["out_of_scope"]! };
 }
