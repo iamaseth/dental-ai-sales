@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 
-export const Route = createFileRoute("/admin/login")({
+export const Route = createFileRoute("/admin_/login")({
   head: () => ({ meta: [{ title: "Platform Admin Login | Dental AI" }] }),
   component: AdminLogin,
 });
