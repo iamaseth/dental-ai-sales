@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { ArrowRight, Bot, CalendarDays, Globe2, Search, Sparkles, Send, HeartHandshake, MousePointer2, Check } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/for-dentists")({
   head: () => ({ meta: [
@@ -18,6 +20,13 @@ const replies = {
   humans: "Yes, we are real people. We are Americans living and working in Cambodia, where our families and lives are based. Lower operating costs let us offer practical pricing, while every clinic receives personal setup, troubleshooting and human support.",
   support: "Message us whenever something is unclear or not working. A real person will review the issue, reply and help solve it. The AI handles repetitive patient questions; humans remain responsible for setup, corrections and support.",
 };
+
+const serviceRows: Array<[LucideIcon, string, string, keyof typeof replies]> = [
+  [Globe2, "Website", "A credible, mobile-first home for your practice.", "website"],
+  [Search, "SEO", "Help nearby patients discover the right treatment pages.", "seo"],
+  [Bot, "AI compatibility", "Structured clinic answers for chat and AI search.", "ai"],
+  [CalendarDays, "Booking & calendar", "Start free, then connect live scheduling when ready.", "booking"],
+];
 
 function answerQuestion(question: string) {
   const q = question.toLowerCase();
@@ -47,12 +56,7 @@ function DentistSales() {
     <header className="border-b border-[#d7e7df] bg-white"><div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-5 py-4"><Link to="/" className="font-bold">View LaBelle patient site</Link><div className="flex items-center gap-3"><Link to="/admin" className="hidden text-sm font-semibold sm:block">CRM demo</Link><Link to="/for-dentists/telegram" className="rounded-full bg-[#1686d9] px-5 py-3 text-sm font-semibold text-white">Telegram handoff</Link></div></div></header>
 
     <section className="mx-auto grid min-h-[700px] max-w-7xl items-center gap-16 px-5 py-24 lg:grid-cols-[1.05fr_.95fr]">
-      <div><h1 className="max-w-3xl text-6xl font-semibold leading-[.94] tracking-[-.04em] sm:text-7xl">Turn your website into a working front desk.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-[#506d68]">A clinic-specific website, patient chatbot, search visibility and booking calendar—built and supported by real people.</p><div className="mt-10 divide-y divide-[#cddfd8] border-y border-[#cddfd8]">{[
-        [Globe2, "Website", "A credible, mobile-first home for your practice."],
-        [Search, "SEO", "Help nearby patients discover the right treatment pages."],
-        [Bot, "AI compatibility", "Structured clinic answers for chat and AI search."],
-        [CalendarDays, "Booking & calendar", "Start free, then connect live scheduling when ready."],
-      ].map(([Icon,title,text]) => <button key={String(title)} onClick={() => setAnswer(replies[String(title).startsWith("Web") ? "website" : String(title).startsWith("SEO") ? "seo" : String(title).startsWith("AI") ? "ai" : "booking"])} className="group grid w-full grid-cols-[auto_1fr] gap-x-4 py-4 text-left sm:grid-cols-[auto_10rem_1fr]"><Icon className="size-5 text-[#1686d9]"/><strong>{title}</strong><span className="col-start-2 mt-1 text-sm text-[#607772] sm:col-start-3 sm:mt-0">{text}</span></button>)}</div></div>
+      <div><h1 className="max-w-3xl text-6xl font-semibold leading-[.94] tracking-[-.04em] sm:text-7xl">Turn your website into a working front desk.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-[#506d68]">A clinic-specific website, patient chatbot, search visibility and booking calendar—built and supported by real people.</p><div className="mt-10 divide-y divide-[#cddfd8] border-y border-[#cddfd8]">{serviceRows.map(([Icon,title,text,key]) => <button key={title} onClick={() => setAnswer(replies[key])} className="group grid w-full grid-cols-[auto_1fr] gap-x-4 py-4 text-left sm:grid-cols-[auto_10rem_1fr]"><Icon className="size-5 text-[#1686d9]"/><strong>{title}</strong><span className="col-start-2 mt-1 text-sm text-[#607772] sm:col-start-3 sm:mt-0">{text}</span></button>)}</div></div>
 
       <div className="relative pt-28 lg:pt-0">
         <div className="sales-pointer absolute right-3 top-0 z-10 flex items-end gap-2 lg:-left-36 lg:right-auto lg:top-12">
