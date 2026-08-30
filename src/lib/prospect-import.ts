@@ -36,15 +36,41 @@ export function normalizeEmail(input?: string | null) {
   return value || null;
 }
 
-export function parseProspectJson(raw: string) {
+export function normalizeProspect(record: ProspectImport): ProspectImport {
+  return {
+    ...record,
+    practice_name: record.practice_name.trim(),
+    website: record.website?.trim() || null,
+    domain: normalizeDomain(record.domain || record.website),
+    phone: record.phone?.trim() || null,
+    email: normalizeEmail(record.email),
+    address: record.address?.trim() || null,
+    city: record.city?.trim() || null,
+    state: record.state?.trim() || null,
+    postal_code: record.postal_code?.trim() || null,
+    contact_name: record.contact_name?.trim() || null,
+    contact_title: record.contact_title?.trim() || null,
+    source_url: record.source_url?.trim() || null,
+    notes: record.notes?.trim() || null,
+  };
+}
+
+export function parseProspectJson(raw: string): ProspectImport[] {
   const parsed: unknown = JSON.parse(raw);
   if (!Array.isArray(parsed)) throw new Error("Expected a JSON array");
+
   const accepted: ProspectImport[] = [];
   const rejected: { row: number; reason: string }[] = [];
+
   parsed.forEach((record, index) => {
     const result = prospectImportSchema.safeParse(record);
-    if (result.success) accepted.push({ ...result.data, domain: normalizeDomain(result.data.domain || result.data.website), email: normalizeEmail(result.data.email) });
+    if (result.success) accepted.push(normalizeProspect(result.data));
     else rejected.push({ row: index + 1, reason: result.error.issues[0]?.message || "Invalid record" });
   });
-  return { accepted, rejected };
+
+  if (!accepted.length && rejected.length) {
+    throw new Error(`No valid prospect records found. First rejected row: ${rejected[0].reason}`);
+  }
+
+  return accepted;
 }
