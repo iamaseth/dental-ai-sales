@@ -22,8 +22,15 @@ export function KrispyWidget() {
     // The current demo remains fully local until a self-hosted Krispy Worker is configured.
     if (!api || !src || document.getElementById(SCRIPT_ID)) return;
 
-    const validApi = new URL(api);
-    const validSrc = new URL(src);
+    let validApi: URL;
+    let validSrc: URL;
+    try {
+      validApi = new URL(api);
+      validSrc = new URL(src);
+    } catch {
+      console.error("Krispy configuration contains an invalid URL.");
+      return;
+    }
     if (validApi.protocol !== "https:" || validSrc.protocol !== "https:") {
       console.error("Krispy configuration must use HTTPS.");
       return;
