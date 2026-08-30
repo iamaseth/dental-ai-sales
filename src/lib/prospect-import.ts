@@ -16,6 +16,18 @@ export const prospectImportSchema = z.object({
   contact_title: z.string().trim().nullable().optional(),
   source_url: z.string().trim().nullable().optional(),
   notes: z.string().trim().nullable().optional(),
+  independent_verified: z.boolean().nullable().optional(),
+  owner_source_url: z.string().trim().nullable().optional(),
+  email_source_url: z.string().trim().nullable().optional(),
+  chatbot_present: z.boolean().nullable().optional(),
+  online_booking_present: z.boolean().nullable().optional(),
+  website_score: z.number().int().min(0).max(100).nullable().optional(),
+  seo_geo_score: z.number().int().min(0).max(100).nullable().optional(),
+  opportunity_score: z.number().int().min(0).max(100).nullable().optional(),
+  mobile_quality: z.enum(["poor","fair","good","excellent"]).nullable().optional(),
+  local_seo_notes: z.string().trim().nullable().optional(),
+  conversion_issues: z.string().trim().nullable().optional(),
+  verification_confidence: z.enum(["low","medium","high"]).nullable().optional(),
 });
 
 export type ProspectImport = z.infer<typeof prospectImportSchema>;
@@ -51,6 +63,10 @@ export function normalizeProspect(record: ProspectImport): ProspectImport {
     contact_name: record.contact_name?.trim() || null,
     contact_title: record.contact_title?.trim() || null,
     source_url: record.source_url?.trim() || null,
+    owner_source_url: record.owner_source_url?.trim() || null,
+    email_source_url: record.email_source_url?.trim() || null,
+    local_seo_notes: record.local_seo_notes?.trim() || null,
+    conversion_issues: record.conversion_issues?.trim() || null,
     notes: record.notes?.trim() || null,
   };
 }
@@ -68,7 +84,7 @@ export function parseProspectJson(raw: string): ProspectImport[] {
     else rejected.push({ row: index + 1, reason: result.error.issues[0]?.message || "Invalid record" });
   });
 
-if (!accepted.length && rejected.length) {
+  if (!accepted.length && rejected.length) {
     throw new Error(`No valid prospect records found. First rejected row: ${rejected[0]?.reason || "Invalid record"}`);
   }
 
