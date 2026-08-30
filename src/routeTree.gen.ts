@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ForDentistsRouteImport } from './routes/for-dentists'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ForDentistsTelegramRouteImport } from './routes/for-dentists.telegram'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForDentistsTelegramRoute = ForDentistsTelegramRouteImport.update({
   id: '/telegram',
   path: '/telegram',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/for-dentists': typeof ForDentistsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/for-dentists/telegram': typeof ForDentistsTelegramRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/for-dentists': typeof ForDentistsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/for-dentists/telegram': typeof ForDentistsTelegramRoute
 }
 export interface FileRoutesById {
@@ -61,21 +69,33 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/for-dentists': typeof ForDentistsRouteWithChildren
   '/admin_/login': typeof AdminLoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/for-dentists/telegram': typeof ForDentistsTelegramRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/admin' | '/for-dentists' | '/admin/login' | '/for-dentists/telegram'
+    | '/'
+    | '/admin'
+    | '/for-dentists'
+    | '/admin/login'
+    | '/auth/callback'
+    | '/for-dentists/telegram'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/admin' | '/for-dentists' | '/admin/login' | '/for-dentists/telegram'
+    | '/'
+    | '/admin'
+    | '/for-dentists'
+    | '/admin/login'
+    | '/auth/callback'
+    | '/for-dentists/telegram'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/for-dentists'
     | '/admin_/login'
+    | '/auth/callback'
     | '/for-dentists/telegram'
   fileRoutesById: FileRoutesById
 }
@@ -84,6 +104,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ForDentistsRoute: typeof ForDentistsRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/for-dentists/telegram': {
       id: '/for-dentists/telegram'
       path: '/telegram'
@@ -143,6 +171,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   ForDentistsRoute: ForDentistsRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
