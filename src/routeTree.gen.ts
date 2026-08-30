@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ForDentistsRouteImport } from './routes/for-dentists'
+import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as ForDentistsTelegramRouteImport } from './routes/for-dentists.telegram'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ForDentistsRoute = ForDentistsRouteImport.update({
   path: '/for-dentists',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin_/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForDentistsTelegramRoute = ForDentistsTelegramRouteImport.update({
   id: '/telegram',
   path: '/telegram',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/for-dentists': typeof ForDentistsRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/for-dentists/telegram': typeof ForDentistsTelegramRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/for-dentists': typeof ForDentistsRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/for-dentists/telegram': typeof ForDentistsTelegramRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,30 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/for-dentists': typeof ForDentistsRouteWithChildren
+  '/admin_/login': typeof AdminLoginRoute
   '/for-dentists/telegram': typeof ForDentistsTelegramRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/for-dentists' | '/for-dentists/telegram'
+  fullPaths:
+    '/' | '/admin' | '/for-dentists' | '/admin/login' | '/for-dentists/telegram'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/for-dentists' | '/for-dentists/telegram'
-  id: '__root__' | '/' | '/admin' | '/for-dentists' | '/for-dentists/telegram'
+  to:
+    '/' | '/admin' | '/for-dentists' | '/admin/login' | '/for-dentists/telegram'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/for-dentists'
+    | '/admin_/login'
+    | '/for-dentists/telegram'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   ForDentistsRoute: typeof ForDentistsRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -89,6 +107,13 @@ declare module '@tanstack/react-router' {
       path: '/for-dentists'
       fullPath: '/for-dentists'
       preLoaderRoute: typeof ForDentistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin_/login': {
+      id: '/admin_/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/for-dentists/telegram': {
@@ -117,6 +142,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ForDentistsRoute: ForDentistsRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

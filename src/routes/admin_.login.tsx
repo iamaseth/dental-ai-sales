@@ -3,7 +3,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { LockKeyhole, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/admin/login")({
+export const Route = createFileRoute("/admin_/login")({
   head: () => ({ meta: [{ title: "Platform Admin Login | Dental AI" }] }),
   component: AdminLogin,
 });
