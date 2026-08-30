@@ -112,14 +112,22 @@ create policy "members can view own membership" on public.clinic_members for sel
 using (user_id = (select auth.uid()));
 
 create policy "members can view clinic settings" on public.clinic_settings for select to authenticated
-using (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid())));
+using (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_settings.clinic_id and m.user_id = (select auth.uid())));
+
+
+create policy "members can view clinic leads" on public.leads for select to authenticated
+using (clinic_id is not null and exists (select 1 from public.clinic_members m where m.clinic_id = leads.clinic_id and m.user_id = (select auth.uid())));
+
+create policy "agents can update clinic leads" on public.leads for update to authenticated
+using (clinic_id is not null and exists (select 1 from public.clinic_members m where m.clinic_id = leads.clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','agent')))
+with check (clinic_id is not null and exists (select 1 from public.clinic_members m where m.clinic_id = leads.clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','agent')));
 
 create policy "members can view clinic conversations" on public.conversations for select to authenticated
-using (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid())));
+using (exists (select 1 from public.clinic_members m where m.clinic_id = conversations.clinic_id and m.user_id = (select auth.uid())));
 
 create policy "agents can update clinic conversations" on public.conversations for update to authenticated
-using (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','agent')))
-with check (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','agent')));
+using (exists (select 1 from public.clinic_members m where m.clinic_id = conversations.clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','agent')))
+with check (exists (select 1 from public.clinic_members m where m.clinic_id = conversations.clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','agent')));
 
 create policy "members can view conversation messages" on public.messages for select to authenticated
 using (exists (select 1 from public.conversations c join public.clinic_members m on m.clinic_id = c.clinic_id where c.id = conversation_id and m.user_id = (select auth.uid())));
@@ -128,14 +136,14 @@ create policy "agents can add human messages" on public.messages for insert to a
 with check (sender_type = 'human' and sender_user_id = (select auth.uid()) and exists (select 1 from public.conversations c join public.clinic_members m on m.clinic_id = c.clinic_id where c.id = conversation_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin','agent')));
 
 create policy "members can view clinic appointments" on public.appointment_requests for select to authenticated
-using (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid())));
+using (exists (select 1 from public.clinic_members m where m.clinic_id = appointment_requests.clinic_id and m.user_id = (select auth.uid())));
 
 create policy "members can view approved knowledge" on public.knowledge_items for select to authenticated
-using (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid())));
+using (exists (select 1 from public.clinic_members m where m.clinic_id = knowledge_items.clinic_id and m.user_id = (select auth.uid())));
 
 create policy "admins can manage knowledge" on public.knowledge_items for all to authenticated
-using (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin')))
-with check (exists (select 1 from public.clinic_members m where m.clinic_id = clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin')));
+using (exists (select 1 from public.clinic_members m where m.clinic_id = knowledge_items.clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin')))
+with check (exists (select 1 from public.clinic_members m where m.clinic_id = knowledge_items.clinic_id and m.user_id = (select auth.uid()) and m.role in ('owner','admin')));
 
 -- Public website and channel webhooks must write through a rate-limited server/Edge
 -- Function. No anonymous table-write policies are intentionally created.
