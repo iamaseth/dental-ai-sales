@@ -593,16 +593,22 @@ export type Database = {
           city: string | null
           contact_name: string | null
           contact_title: string | null
+          conversion_issues: string | null
           created_at: string
           domain: string | null
           email: string | null
+          email_source_url: string | null
           google_rating: number | null
           google_reviews: number | null
           id: string
+          independent_verified: boolean | null
+          local_seo_notes: string | null
+          mobile_quality: string | null
           next_follow_up_at: string | null
           notes: string | null
           online_booking_present: boolean | null
           opportunity_score: number | null
+          owner_source_url: string | null
           phone: string | null
           postal_code: string | null
           practice_name: string
@@ -612,6 +618,7 @@ export type Database = {
           stage: string
           state: string | null
           updated_at: string
+          verification_confidence: string | null
           verification_status: string
           website: string | null
           website_score: number | null
@@ -622,16 +629,22 @@ export type Database = {
           city?: string | null
           contact_name?: string | null
           contact_title?: string | null
+          conversion_issues?: string | null
           created_at?: string
           domain?: string | null
           email?: string | null
+          email_source_url?: string | null
           google_rating?: number | null
           google_reviews?: number | null
           id?: string
+          independent_verified?: boolean | null
+          local_seo_notes?: string | null
+          mobile_quality?: string | null
           next_follow_up_at?: string | null
           notes?: string | null
           online_booking_present?: boolean | null
           opportunity_score?: number | null
+          owner_source_url?: string | null
           phone?: string | null
           postal_code?: string | null
           practice_name: string
@@ -641,6 +654,7 @@ export type Database = {
           stage?: string
           state?: string | null
           updated_at?: string
+          verification_confidence?: string | null
           verification_status?: string
           website?: string | null
           website_score?: number | null
@@ -651,16 +665,22 @@ export type Database = {
           city?: string | null
           contact_name?: string | null
           contact_title?: string | null
+          conversion_issues?: string | null
           created_at?: string
           domain?: string | null
           email?: string | null
+          email_source_url?: string | null
           google_rating?: number | null
           google_reviews?: number | null
           id?: string
+          independent_verified?: boolean | null
+          local_seo_notes?: string | null
+          mobile_quality?: string | null
           next_follow_up_at?: string | null
           notes?: string | null
           online_booking_present?: boolean | null
           opportunity_score?: number | null
+          owner_source_url?: string | null
           phone?: string | null
           postal_code?: string | null
           practice_name?: string
@@ -670,6 +690,7 @@ export type Database = {
           stage?: string
           state?: string | null
           updated_at?: string
+          verification_confidence?: string | null
           verification_status?: string
           website?: string | null
           website_score?: number | null
