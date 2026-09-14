@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-{ title: "Dental AI Sales Platform" },
+      { title: "Dental AI Sales Platform" },
       { name: "description", content: "Dental AI Sales Platform" },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Dental AI Sales Platform" },
@@ -125,8 +125,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Link
+        to="/designs"
+        className="fixed bottom-5 left-5 z-[70] inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-900 shadow-2xl transition hover:-translate-y-0.5 hover:shadow-xl"
+        aria-label="View all three customized website designs"
+      >
+        <span className="grid size-6 place-items-center rounded-full bg-[#0870c8] text-xs font-bold text-white">3</span>
+        View your 3 website designs
+      </Link>
     </QueryClientProvider>
   );
 }
